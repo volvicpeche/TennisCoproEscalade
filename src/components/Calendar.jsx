@@ -6,9 +6,11 @@ const openingHour = 8
 const closingHour = 21
 
 function getStartOfWeek(date = new Date()) {
-  const day = date.getDay()
-  const diff = date.getDate() - day + (day === 0 ? -6 : 1) // adjust when day is sunday
-  return new Date(date.setDate(diff))
+  const d = new Date(date)
+  const day = d.getDay()
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1)
+  d.setDate(diff)
+  return d
 }
 
 export default function Calendar() {

@@ -44,4 +44,8 @@
 .error {
   color: #f87171;
   margin-bottom: 1rem;
+} 
+
+.form-error {
+  color: #f87171;
 }
