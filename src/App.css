@@ -40,3 +40,8 @@
   gap: 1rem;
   justify-content: flex-end;
 }
+
+.error {
+  color: #f87171;
+  margin-bottom: 1rem;
+}
