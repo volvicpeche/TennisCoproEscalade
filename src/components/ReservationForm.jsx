@@ -13,8 +13,12 @@ export default function ReservationForm({ start, onClose, onSaved }) {
     setFormError(null)
     const { error } = await supabase.from('reservations').insert({
       name,
-      start: start.toISOString(),
-      end: new Date(start.getTime() + duration * 60 * 60 * 1000).toISOString(),
+      date: start.toISOString().split('T')[0],
+      start_time: start.toISOString().split('T')[1].slice(0, 8),
+      end_time: new Date(start.getTime() + duration * 60 * 60 * 1000)
+        .toISOString()
+        .split('T')[1]
+        .slice(0, 8),
     })
     setSaving(false)
     if (!error) {

@@ -22,8 +22,13 @@ export default function Calendar() {
     const { data, error } = await supabase
       .from('reservations')
       .select('*')
-      .gte('start', getStartOfWeek().toISOString())
-      .lte('start', new Date(getStartOfWeek().getTime() + 7 * 24 * 60 * 60 * 1000).toISOString())
+      .gte('date', getStartOfWeek().toISOString().split('T')[0])
+      .lte(
+        'date',
+        new Date(getStartOfWeek().getTime() + 7 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split('T')[0]
+      )
     if (error) {
       console.error(error.message)
       // optionally set an error state for UI feedback
@@ -31,7 +36,12 @@ export default function Calendar() {
       return
     }
     setErrorMsg(null)
-    setReservations(data)
+    const withDates = data.map(r => ({
+      ...r,
+      start: new Date(`${r.date}T${r.start_time}`),
+      end: new Date(`${r.date}T${r.end_time}`),
+    }))
+    setReservations(withDates)
   }
 
   useEffect(() => {
