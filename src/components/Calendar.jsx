@@ -16,6 +16,7 @@ function getStartOfWeek(date = new Date()) {
 export default function Calendar() {
   const [reservations, setReservations] = useState([])
   const [selectedSlot, setSelectedSlot] = useState(null)
+  const [errorMsg, setErrorMsg] = useState(null)
 
   const fetchReservations = async () => {
     const { data, error } = await supabase
@@ -23,7 +24,14 @@ export default function Calendar() {
       .select('*')
       .gte('start', getStartOfWeek().toISOString())
       .lte('start', new Date(getStartOfWeek().getTime() + 7 * 24 * 60 * 60 * 1000).toISOString())
-    if (!error) setReservations(data)
+    if (error) {
+      console.error(error.message)
+      // optionally set an error state for UI feedback
+      setErrorMsg('Erreur lors du chargement des réservations')
+      return
+    }
+    setErrorMsg(null)
+    setReservations(data)
   }
 
   useEffect(() => {
@@ -59,6 +67,7 @@ export default function Calendar() {
 
   return (
     <div>
+      {errorMsg && <p className="error">{errorMsg}</p>}
       <table className="calendar">
         <thead>
           <tr>
