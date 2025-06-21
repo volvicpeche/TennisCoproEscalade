@@ -1,6 +1,10 @@
 import { useState } from 'react'
 import { supabase } from '../supabaseClient'
 
+const pad = n => String(n).padStart(2, '0')
+const formatDate = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+const formatTime = d => `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
+
 export default function ReservationForm({ start, onClose, onSaved }) {
   const [name, setName] = useState('')
   const [duration, setDuration] = useState(1)
@@ -13,12 +17,9 @@ export default function ReservationForm({ start, onClose, onSaved }) {
     setFormError(null)
     const { error } = await supabase.from('reservations').insert({
       name,
-      date: start.toISOString().split('T')[0],
-      start_time: start.toISOString().split('T')[1].slice(0, 8),
-      end_time: new Date(start.getTime() + duration * 60 * 60 * 1000)
-        .toISOString()
-        .split('T')[1]
-        .slice(0, 8),
+      date: formatDate(start),
+      start_time: formatTime(start),
+      end_time: formatTime(new Date(start.getTime() + duration * 60 * 60 * 1000)),
     })
     setSaving(false)
     if (!error) {
@@ -32,7 +33,10 @@ export default function ReservationForm({ start, onClose, onSaved }) {
   return (
     <div className="modal">
       <form onSubmit={handleSubmit} className="form">
-        <h3>Réserver le {start.toLocaleString()}</h3>
+        <h3>
+          Réserver le{' '}
+          {start.toLocaleString('fr-FR', { timeZone: 'Europe/Paris' })}
+        </h3>
         <label htmlFor="name">Nom / Lot</label>
         <input
           id="name"

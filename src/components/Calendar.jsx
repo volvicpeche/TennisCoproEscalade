@@ -5,6 +5,9 @@ import ReservationForm from './ReservationForm'
 const openingHour = 8
 const closingHour = 21
 
+const pad = n => String(n).padStart(2, '0')
+const formatDate = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+
 function getStartOfWeek(date = new Date()) {
   const d = new Date(date)
   const day = d.getDay()
@@ -19,16 +22,13 @@ export default function Calendar() {
   const [errorMsg, setErrorMsg] = useState(null)
 
   const fetchReservations = async () => {
+    const start = getStartOfWeek()
+    const end = new Date(start.getTime() + 7 * 24 * 60 * 60 * 1000)
     const { data, error } = await supabase
       .from('reservations')
       .select('*')
-      .gte('date', getStartOfWeek().toISOString().split('T')[0])
-      .lte(
-        'date',
-        new Date(getStartOfWeek().getTime() + 7 * 24 * 60 * 60 * 1000)
-          .toISOString()
-          .split('T')[0]
-      )
+      .gte('date', formatDate(start))
+      .lte('date', formatDate(end))
     if (error) {
       console.error(error.message)
       // optionally set an error state for UI feedback
@@ -83,7 +83,9 @@ export default function Calendar() {
           <tr>
             <th></th>
             {days.map(d => (
-              <th key={d.toDateString()}>{d.toLocaleDateString()}</th>
+              <th key={d.toDateString()}>
+                {d.toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris' })}
+              </th>
             ))}
           </tr>
         </thead>
