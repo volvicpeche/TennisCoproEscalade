@@ -3,11 +3,17 @@
 import express from 'express'
 import nodemailer from 'nodemailer'
 import dotenv from 'dotenv'
+import path from 'path'
+import { fileURLToPath } from 'url'
 
 dotenv.config()
 
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
 const app = express()
 app.use(express.json())
+app.use(express.static(path.join(__dirname, 'dist')))
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
@@ -32,6 +38,18 @@ app.post('/api/send-email', async (req, res) => {
     console.error(err)
     res.status(500).json({ error: 'Email send failed' })
   }
+})
+
+app.get('/api/config', (req, res) => {
+  res.json({
+    supabaseUrl: process.env.VITE_SUPABASE_URL,
+    supabaseAnonKey: process.env.VITE_SUPABASE_ANON_KEY,
+    adminEmail: process.env.VITE_ADMIN_EMAIL,
+  })
+})
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'))
 })
 
 const port = process.env.PORT || 3001

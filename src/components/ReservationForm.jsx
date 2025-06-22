@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { supabase } from '../supabaseClient'
+import { getSupabase } from '../supabaseClient'
 import { sendEmail } from '../utils/email'
 import {
   TIME_ZONE,
@@ -19,6 +19,7 @@ export default function ReservationForm({ start, onClose, onSaved }) {
     e.preventDefault()
     setSaving(true)
     setFormError(null)
+    const supabase = await getSupabase()
     const startWeek = getStartOfWeek(start)
     const endWeek = new Date(startWeek.getTime() + 7 * 24 * 60 * 60 * 1000)
     const { data: existing, error: fetchError } = await supabase

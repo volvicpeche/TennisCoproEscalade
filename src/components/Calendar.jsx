@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { supabase } from '../supabaseClient'
+import { getSupabase } from '../supabaseClient'
 import { sendEmail } from '../utils/email'
 import ReservationForm from './ReservationForm'
 import {
@@ -27,6 +27,7 @@ export default function Calendar() {
   const [weekOffset, setWeekOffset] = useState(MIN_WEEK_OFFSET)
 
   const fetchReservations = useCallback(async () => {
+    const supabase = await getSupabase()
     const start = getStartOfWeek()
     start.setDate(start.getDate() + weekOffset * 7)
     const end = new Date(start.getTime() + 7 * 24 * 60 * 60 * 1000)
@@ -71,6 +72,7 @@ export default function Calendar() {
 
   const handleDelete = async reservation => {
     if (!window.confirm('Annuler cette réservation ?')) return
+    const supabase = await getSupabase()
     const { error } = await supabase
       .from('reservations')
       .delete()
@@ -102,6 +104,7 @@ export default function Calendar() {
       setErrorMsg('Mot de passe incorrect')
       return
     }
+    const supabase = await getSupabase()
     const { error } = await supabase
       .from('reservations')
       .update({ status: 'validated' })

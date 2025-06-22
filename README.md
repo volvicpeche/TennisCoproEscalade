@@ -23,10 +23,15 @@ Environment variables required:
 - `SMTP_PORT`
 - `SMTP_USER`
 - `SMTP_PASS`
+- `PORT` (optional, defaults to 3001)
+
+The Node server uses Express to expose an API for sending emails and to provide
+the Supabase configuration values at `/api/config`. It also serves the built
+React application from the `dist` directory when running in production.
 
 Copy `.env.example` to `.env` and fill in the actual values for these keys.
 
-To send notification emails, start the email server in another terminal with:
+To run the server (and enable email notifications), start it with:
 
 ```
 npm run server

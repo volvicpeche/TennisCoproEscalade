@@ -1,6 +1,12 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+let clientPromise
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export async function getSupabase() {
+  if (!clientPromise) {
+    clientPromise = fetch('/api/config')
+      .then(res => res.json())
+      .then(cfg => createClient(cfg.supabaseUrl, cfg.supabaseAnonKey))
+  }
+  return clientPromise
+}
