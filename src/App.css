@@ -12,8 +12,11 @@
 .calendar td.free {
   cursor: pointer;
 }
-.calendar td.reserved {
-  background-color: #f87171;
+.calendar td.reserved.pending {
+  background-color: #fb923c;
+}
+.calendar td.reserved.validated {
+  background-color: #4ade80;
 }
 .modal {
   position: fixed;

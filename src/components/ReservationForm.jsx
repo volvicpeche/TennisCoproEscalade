@@ -24,6 +24,7 @@ export default function ReservationForm({ start, onClose, onSaved }) {
         new Date(start.getTime() + duration * 60 * 60 * 1000),
         TIME_ZONE
       ),
+      status: 'pending',
     })
     setSaving(false)
     if (!error) {

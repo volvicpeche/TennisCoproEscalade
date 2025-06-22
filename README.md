@@ -2,6 +2,10 @@
 
 Simple reservation calendar using React and Supabase.
 
+New reservations are now created in a **pending** state. Pending slots are shown
+in orange on the calendar. They can be validated from the reservation details
+dialog, turning the slot green.
+
 ```
 # Install dependencies
 npm install

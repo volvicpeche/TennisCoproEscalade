@@ -84,6 +84,21 @@ export default function Calendar() {
     fetchReservations()
   }
 
+  const handleValidate = async reservation => {
+    const { error } = await supabase
+      .from('reservations')
+      .update({ status: 'validated' })
+      .eq('id', reservation.id)
+    if (error) {
+      console.error(error.message)
+      setErrorMsg("Erreur lors de la validation")
+      return
+    }
+    setErrorMsg(null)
+    closeReservationDetails()
+    fetchReservations()
+  }
+
   const hours = []
   for (let h = openingHour; h < closingHour; h++) {
     hours.push(h)
@@ -124,7 +139,9 @@ export default function Calendar() {
                 return (
                   <td
                     key={day.toDateString() + hour}
-                    className={reserved ? 'reserved' : 'free'}
+                    className={
+                      reserved ? `reserved ${reserved.status || ''}` : 'free'
+                    }
                     onClick={() =>
                       reserved
                         ? setSelectedReservation(reserved)
@@ -150,6 +167,14 @@ export default function Calendar() {
               {selectedReservation.start.toLocaleString('fr-FR', { timeZone: TIME_ZONE })}
             </p>
             <div className="actions">
+              {selectedReservation.status === 'pending' && (
+                <button
+                  type="button"
+                  onClick={() => handleValidate(selectedReservation)}
+                >
+                  Valider
+                </button>
+              )}
               <button type="button" onClick={() => handleDelete(selectedReservation)}>
                 Annuler
               </button>
