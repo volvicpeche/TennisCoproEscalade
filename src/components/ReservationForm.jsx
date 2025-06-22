@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { supabase } from '../supabaseClient'
-
-const pad = n => String(n).padStart(2, '0')
-const formatDate = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
-const formatTime = d => `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
+import {
+  TIME_ZONE,
+  formatDateInZone,
+  formatTimeInZone,
+} from '../utils/dateHelpers'
 
 export default function ReservationForm({ start, onClose, onSaved }) {
   const [name, setName] = useState('')
@@ -17,9 +18,12 @@ export default function ReservationForm({ start, onClose, onSaved }) {
     setFormError(null)
     const { error } = await supabase.from('reservations').insert({
       name,
-      date: formatDate(start),
-      start_time: formatTime(start),
-      end_time: formatTime(new Date(start.getTime() + duration * 60 * 60 * 1000)),
+      date: formatDateInZone(start, TIME_ZONE),
+      start_time: formatTimeInZone(start, TIME_ZONE),
+      end_time: formatTimeInZone(
+        new Date(start.getTime() + duration * 60 * 60 * 1000),
+        TIME_ZONE
+      ),
     })
     setSaving(false)
     if (!error) {
@@ -35,7 +39,7 @@ export default function ReservationForm({ start, onClose, onSaved }) {
       <form onSubmit={handleSubmit} className="form">
         <h3>
           Réserver le{' '}
-          {start.toLocaleString('fr-FR', { timeZone: 'Europe/Paris' })}
+          {start.toLocaleString('fr-FR', { timeZone: TIME_ZONE })}
         </h3>
         <label htmlFor="name">Nom / Lot</label>
         <input
