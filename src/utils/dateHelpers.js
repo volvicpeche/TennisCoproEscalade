@@ -13,10 +13,12 @@ function getTZOffset(date, timeZone = TIME_ZONE) {
 }
 
 function createZonedDate(day, hour, minute = 0, second = 0, timeZone = TIME_ZONE) {
-  const base = new Date(day)
-  base.setHours(hour, minute, second, 0)
-  const offset = getTZOffset(base, timeZone)
-  return new Date(base.getTime() - (offset - base.getTimezoneOffset()) * 60 * 1000)
+  const year = day.getFullYear()
+  const month = day.getMonth()
+  const date = day.getDate()
+  const utc = new Date(Date.UTC(year, month, date, hour, minute, second))
+  const offset = getTZOffset(utc, timeZone)
+  return new Date(utc.getTime() - offset * 60 * 1000)
 }
 
 function formatDateInZone(date, timeZone = TIME_ZONE) {
