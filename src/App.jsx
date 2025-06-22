@@ -3,7 +3,7 @@ import Calendar from './components/Calendar'
 
 export default function App() {
   return (
-    <div>
+    <div className="app-container">
       <h1>Réservations</h1>
       <Calendar />
     </div>

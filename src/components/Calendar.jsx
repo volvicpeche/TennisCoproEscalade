@@ -119,7 +119,8 @@ export default function Calendar() {
   return (
     <div>
       {errorMsg && <p className="error">{errorMsg}</p>}
-      <table className="calendar">
+      <div className="calendar-wrapper">
+        <table className="calendar">
         <thead>
           <tr>
             <th></th>
@@ -155,7 +156,8 @@ export default function Calendar() {
             </tr>
           ))}
         </tbody>
-      </table>
+        </table>
+      </div>
       {selectedSlot && (
         <ReservationForm start={selectedSlot} onClose={closeForm} onSaved={fetchReservations} />
       )}
