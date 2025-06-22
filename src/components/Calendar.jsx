@@ -13,6 +13,9 @@ const VALIDATION_PASSWORD = import.meta.env.VITE_VALIDATION_PASSWORD
 const openingHour = 8
 const closingHour = 21
 
+const MIN_WEEK_OFFSET = 0
+const MAX_WEEK_OFFSET = 1
+
 const formatDate = d => formatDateInZone(d)
 
 export default function Calendar() {
@@ -20,7 +23,7 @@ export default function Calendar() {
   const [selectedSlot, setSelectedSlot] = useState(null)
   const [selectedReservation, setSelectedReservation] = useState(null)
   const [errorMsg, setErrorMsg] = useState(null)
-  const [weekOffset, setWeekOffset] = useState(0)
+  const [weekOffset, setWeekOffset] = useState(MIN_WEEK_OFFSET)
 
   const fetchReservations = useCallback(async () => {
     const start = getStartOfWeek()
@@ -125,8 +128,8 @@ export default function Calendar() {
       <div className="week-nav">
         <button
           type="button"
-          onClick={() => setWeekOffset(weekOffset - 1)}
-          disabled={weekOffset <= 0}
+          onClick={() => setWeekOffset(Math.max(MIN_WEEK_OFFSET, weekOffset - 1))}
+          disabled={weekOffset <= MIN_WEEK_OFFSET}
         >
           &lt;
         </button>
@@ -136,8 +139,8 @@ export default function Calendar() {
         </span>
         <button
           type="button"
-          onClick={() => setWeekOffset(weekOffset + 1)}
-          disabled={weekOffset >= 1}
+          onClick={() => setWeekOffset(Math.min(MAX_WEEK_OFFSET, weekOffset + 1))}
+          disabled={weekOffset >= MAX_WEEK_OFFSET}
         >
           &gt;
         </button>
