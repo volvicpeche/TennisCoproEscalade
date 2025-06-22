@@ -16,8 +16,12 @@ export default function ReservationForm({ start, onClose, onSaved }) {
     e.preventDefault()
     setSaving(true)
     setFormError(null)
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
     const { error } = await supabase.from('reservations').insert({
       name,
+      user_id: user?.id,
       date: formatDateInZone(start, TIME_ZONE),
       start_time: formatTimeInZone(start, TIME_ZONE),
       end_time: formatTimeInZone(
