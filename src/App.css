@@ -67,6 +67,14 @@
   margin-bottom: 1rem;
 }
 
+.week-nav {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
 .form-error {
   color: #dc2626;
 }

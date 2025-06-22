@@ -50,9 +50,21 @@ function formatTimeInZone(date, timeZone = TIME_ZONE) {
   return `${parts.hour}:${parts.minute}:${parts.second}`
 }
 
+function getStartOfWeek(
+  date = new Date(new Date().toLocaleString('en-US', { timeZone: TIME_ZONE })),
+) {
+  const d = new Date(date)
+  const day = d.getDay()
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1)
+  d.setDate(diff)
+  d.setHours(0, 0, 0, 0)
+  return d
+}
+
 export {
   TIME_ZONE,
   createZonedDate,
   formatDateInZone,
   formatTimeInZone,
+  getStartOfWeek,
 }
