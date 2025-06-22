@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { getSupabase } from '../supabaseClient'
+import { createReservation, listReservations, fetchConfig } from '../apiClient'
 import { sendEmail } from '../utils/email'
 import {
   TIME_ZONE,
@@ -19,16 +19,16 @@ export default function ReservationForm({ start, onClose, onSaved }) {
     e.preventDefault()
     setSaving(true)
     setFormError(null)
-    const supabase = await getSupabase()
     const startWeek = getStartOfWeek(start)
     const endWeek = new Date(startWeek.getTime() + 7 * 24 * 60 * 60 * 1000)
-    const { data: existing, error: fetchError } = await supabase
-      .from('reservations')
-      .select('id')
-      .eq('name', name)
-      .gte('date', formatDateInZone(startWeek, TIME_ZONE))
-      .lte('date', formatDateInZone(endWeek, TIME_ZONE))
-    if (fetchError) {
+    let existing
+    try {
+      existing = await listReservations({
+        name,
+        start: formatDateInZone(startWeek, TIME_ZONE),
+        end: formatDateInZone(endWeek, TIME_ZONE),
+      })
+    } catch {
       setSaving(false)
       setFormError('Erreur lors de la vérification des réservations')
       return
@@ -38,19 +38,27 @@ export default function ReservationForm({ start, onClose, onSaved }) {
       setFormError('Limite de 2 réservations par semaine atteinte')
       return
     }
-    const { error } = await supabase.from('reservations').insert({
-      name,
-      email,
-      date: formatDateInZone(start, TIME_ZONE),
-      start_time: formatTimeInZone(start, TIME_ZONE),
-      end_time: formatTimeInZone(
-        new Date(start.getTime() + duration * 60 * 60 * 1000),
-        TIME_ZONE
-      ),
-      status: 'pending',
-    })
+    const startTimeStr = formatTimeInZone(start, TIME_ZONE)
+    const endTimeStr = formatTimeInZone(
+      new Date(start.getTime() + duration * 60 * 60 * 1000),
+      TIME_ZONE
+    )
+    try {
+      await createReservation({
+        name,
+        email,
+        date: formatDateInZone(start, TIME_ZONE),
+        start_time: startTimeStr,
+        end_time: endTimeStr,
+      })
+    } catch {
+      setSaving(false)
+      setFormError('Erreur lors de la reservation')
+      return
+    }
     setSaving(false)
-    if (!error) {
+    try {
+      const cfg = await fetchConfig()
       const dateStr = start.toLocaleString('fr-FR', { timeZone: TIME_ZONE })
       await sendEmail(
         email,
@@ -58,14 +66,14 @@ export default function ReservationForm({ start, onClose, onSaved }) {
         `Votre réservation du ${dateStr} est en attente de validation.`
       )
       await sendEmail(
-        import.meta.env.VITE_ADMIN_EMAIL,
+        cfg.adminEmail,
         'Nouvelle réservation',
         `${name} a réservé le ${dateStr}.`
       )
       onSaved()
       onClose()
-    } else {
-      setFormError('Erreur lors de la reservation')
+    } catch {
+      // email errors are non fatal
     }
   }
 

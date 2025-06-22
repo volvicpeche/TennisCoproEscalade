@@ -1,5 +1,10 @@
 import { useEffect, useState, useCallback } from 'react'
-import { getSupabase } from '../supabaseClient'
+import {
+  listReservations,
+  deleteReservation as apiDeleteReservation,
+  validateReservation as apiValidateReservation,
+  fetchConfig,
+} from '../apiClient'
 import { sendEmail } from '../utils/email'
 import ReservationForm from './ReservationForm'
 import {
@@ -27,18 +32,17 @@ export default function Calendar() {
   const [weekOffset, setWeekOffset] = useState(MIN_WEEK_OFFSET)
 
   const fetchReservations = useCallback(async () => {
-    const supabase = await getSupabase()
     const start = getStartOfWeek()
     start.setDate(start.getDate() + weekOffset * 7)
     const end = new Date(start.getTime() + 7 * 24 * 60 * 60 * 1000)
-    const { data, error } = await supabase
-      .from('reservations')
-      .select('*')
-      .gte('date', formatDate(start))
-      .lte('date', formatDate(end))
-    if (error) {
-      console.error(error.message)
-      // optionally set an error state for UI feedback
+    let data
+    try {
+      data = await listReservations({
+        start: formatDate(start),
+        end: formatDate(end),
+      })
+    } catch (err) {
+      console.error(err)
       setErrorMsg('Erreur lors du chargement des réservations')
       return
     }
@@ -72,13 +76,10 @@ export default function Calendar() {
 
   const handleDelete = async reservation => {
     if (!window.confirm('Annuler cette réservation ?')) return
-    const supabase = await getSupabase()
-    const { error } = await supabase
-      .from('reservations')
-      .delete()
-      .eq('id', reservation.id)
-    if (error) {
-      console.error(error.message)
+    try {
+      await apiDeleteReservation(reservation.id)
+    } catch (err) {
+      console.error(err)
       setErrorMsg("Erreur lors de l'annulation")
       return
     }
@@ -89,8 +90,9 @@ export default function Calendar() {
       'Réservation annulée',
       `Votre réservation du ${dateStr} a été annulée.`
     )
+    const cfg = await fetchConfig()
     await sendEmail(
-      import.meta.env.VITE_ADMIN_EMAIL,
+      cfg.adminEmail,
       'Réservation annulée',
       `La réservation de ${reservation.name} du ${dateStr} a été annulée.`
     )
@@ -104,13 +106,10 @@ export default function Calendar() {
       setErrorMsg('Mot de passe incorrect')
       return
     }
-    const supabase = await getSupabase()
-    const { error } = await supabase
-      .from('reservations')
-      .update({ status: 'validated' })
-      .eq('id', reservation.id)
-    if (error) {
-      console.error(error.message)
+    try {
+      await apiValidateReservation(reservation.id)
+    } catch (err) {
+      console.error(err)
       setErrorMsg("Erreur lors de la validation")
       return
     }
@@ -121,8 +120,9 @@ export default function Calendar() {
       'Réservation validée',
       `Votre réservation du ${dateStr} a été validée.`
     )
+    const cfg = await fetchConfig()
     await sendEmail(
-      import.meta.env.VITE_ADMIN_EMAIL,
+      cfg.adminEmail,
       'Réservation validée',
       `La réservation de ${reservation.name} du ${dateStr} a été validée.`
     )
