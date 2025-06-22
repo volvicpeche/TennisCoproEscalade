@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../supabaseClient'
+import { sendEmail } from '../utils/email'
 import ReservationForm from './ReservationForm'
 import {
   TIME_ZONE,
@@ -80,6 +81,17 @@ export default function Calendar() {
       return
     }
     setErrorMsg(null)
+    const dateStr = reservation.start.toLocaleString('fr-FR', { timeZone: TIME_ZONE })
+    await sendEmail(
+      reservation.email,
+      'Réservation annulée',
+      `Votre réservation du ${dateStr} a été annulée.`
+    )
+    await sendEmail(
+      import.meta.env.VITE_ADMIN_EMAIL,
+      'Réservation annulée',
+      `La réservation de ${reservation.name} du ${dateStr} a été annulée.`
+    )
     closeReservationDetails()
     fetchReservations()
   }
@@ -100,6 +112,17 @@ export default function Calendar() {
       return
     }
     setErrorMsg(null)
+    const dateStr = reservation.start.toLocaleString('fr-FR', { timeZone: TIME_ZONE })
+    await sendEmail(
+      reservation.email,
+      'Réservation validée',
+      `Votre réservation du ${dateStr} a été validée.`
+    )
+    await sendEmail(
+      import.meta.env.VITE_ADMIN_EMAIL,
+      'Réservation validée',
+      `La réservation de ${reservation.name} du ${dateStr} a été validée.`
+    )
     closeReservationDetails()
     fetchReservations()
   }

@@ -18,5 +18,16 @@ Environment variables required:
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
 - `VITE_VALIDATION_PASSWORD`
+- `VITE_ADMIN_EMAIL`
+- `SMTP_HOST`
+- `SMTP_PORT`
+- `SMTP_USER`
+- `SMTP_PASS`
 
 Copy `.env.example` to `.env` and fill in the actual values for these keys.
+
+To send notification emails, start the email server in another terminal with:
+
+```
+npm run server
+```

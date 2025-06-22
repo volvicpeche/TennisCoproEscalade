@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '../supabaseClient'
+import { sendEmail } from '../utils/email'
 import {
   TIME_ZONE,
   formatDateInZone,
@@ -9,6 +10,7 @@ import {
 
 export default function ReservationForm({ start, onClose, onSaved }) {
   const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
   const [duration, setDuration] = useState(1)
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState(null)
@@ -37,6 +39,7 @@ export default function ReservationForm({ start, onClose, onSaved }) {
     }
     const { error } = await supabase.from('reservations').insert({
       name,
+      email,
       date: formatDateInZone(start, TIME_ZONE),
       start_time: formatTimeInZone(start, TIME_ZONE),
       end_time: formatTimeInZone(
@@ -47,6 +50,17 @@ export default function ReservationForm({ start, onClose, onSaved }) {
     })
     setSaving(false)
     if (!error) {
+      const dateStr = start.toLocaleString('fr-FR', { timeZone: TIME_ZONE })
+      await sendEmail(
+        email,
+        'Réservation enregistrée',
+        `Votre réservation du ${dateStr} est en attente de validation.`
+      )
+      await sendEmail(
+        import.meta.env.VITE_ADMIN_EMAIL,
+        'Nouvelle réservation',
+        `${name} a réservé le ${dateStr}.`
+      )
       onSaved()
       onClose()
     } else {
@@ -66,6 +80,14 @@ export default function ReservationForm({ start, onClose, onSaved }) {
           id="name"
           value={name}
           onChange={e => setName(e.target.value)}
+          required
+        />
+        <label htmlFor="email">Email</label>
+        <input
+          id="email"
+          type="email"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
           required
         />
         <label htmlFor="duration">Durée (h)</label>
