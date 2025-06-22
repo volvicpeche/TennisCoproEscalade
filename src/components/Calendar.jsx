@@ -59,7 +59,7 @@ export default function Calendar() {
   }, [])
 
   const handleClick = (day, hour) => {
-    const start = createZonedDate(day, hour, TIME_ZONE)
+    const start = createZonedDate(day, hour, 0, 0, TIME_ZONE)
     setSelectedSlot(start)
   }
 
