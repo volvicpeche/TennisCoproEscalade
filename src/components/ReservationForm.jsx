@@ -1,5 +1,10 @@
 import { useState } from 'react'
 import { supabase } from '../supabaseClient'
+import {
+  TIME_ZONE,
+  formatDateInZone,
+  formatTimeInZone,
+} from '../utils/dateHelpers'
 
 export default function ReservationForm({ start, onClose, onSaved }) {
   const [name, setName] = useState('')
@@ -13,12 +18,12 @@ export default function ReservationForm({ start, onClose, onSaved }) {
     setFormError(null)
     const { error } = await supabase.from('reservations').insert({
       name,
-      date: start.toISOString().split('T')[0],
-      start_time: start.toISOString().split('T')[1].slice(0, 8),
-      end_time: new Date(start.getTime() + duration * 60 * 60 * 1000)
-        .toISOString()
-        .split('T')[1]
-        .slice(0, 8),
+      date: formatDateInZone(start, TIME_ZONE),
+      start_time: formatTimeInZone(start, TIME_ZONE),
+      end_time: formatTimeInZone(
+        new Date(start.getTime() + duration * 60 * 60 * 1000),
+        TIME_ZONE
+      ),
     })
     setSaving(false)
     if (!error) {
@@ -32,7 +37,10 @@ export default function ReservationForm({ start, onClose, onSaved }) {
   return (
     <div className="modal">
       <form onSubmit={handleSubmit} className="form">
-        <h3>Réserver le {start.toLocaleString()}</h3>
+        <h3>
+          Réserver le{' '}
+          {start.toLocaleString('fr-FR', { timeZone: TIME_ZONE })}
+        </h3>
         <label htmlFor="name">Nom / Lot</label>
         <input
           id="name"

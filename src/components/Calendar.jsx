@@ -1,11 +1,18 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import ReservationForm from './ReservationForm'
+import {
+  TIME_ZONE,
+  createZonedDate,
+  formatDateInZone,
+} from '../utils/dateHelpers'
 
 const openingHour = 8
 const closingHour = 21
 
-function getStartOfWeek(date = new Date()) {
+const formatDate = d => formatDateInZone(d)
+
+function getStartOfWeek(date = new Date(new Date().toLocaleString('en-US', { timeZone: TIME_ZONE }))) {
   const d = new Date(date)
   const day = d.getDay()
   const diff = d.getDate() - day + (day === 0 ? -6 : 1)
@@ -19,16 +26,13 @@ export default function Calendar() {
   const [errorMsg, setErrorMsg] = useState(null)
 
   const fetchReservations = async () => {
+    const start = getStartOfWeek()
+    const end = new Date(start.getTime() + 7 * 24 * 60 * 60 * 1000)
     const { data, error } = await supabase
       .from('reservations')
       .select('*')
-      .gte('date', getStartOfWeek().toISOString().split('T')[0])
-      .lte(
-        'date',
-        new Date(getStartOfWeek().getTime() + 7 * 24 * 60 * 60 * 1000)
-          .toISOString()
-          .split('T')[0]
-      )
+      .gte('date', formatDate(start))
+      .lte('date', formatDate(end))
     if (error) {
       console.error(error.message)
       // optionally set an error state for UI feedback
@@ -36,11 +40,17 @@ export default function Calendar() {
       return
     }
     setErrorMsg(null)
-    const withDates = data.map(r => ({
-      ...r,
-      start: new Date(`${r.date}T${r.start_time}`),
-      end: new Date(`${r.date}T${r.end_time}`),
-    }))
+    const withDates = data.map(r => {
+      const [sh, sm, ss] = r.start_time.split(':').map(Number)
+      const [eh, em, es] = r.end_time.split(':').map(Number)
+      return {
+        ...r,
+        start: createZonedDate(new Date(r.date), sh, sm, ss, TIME_ZONE),
+        end: createZonedDate(new Date(r.date), eh, em, es, TIME_ZONE),
+        startHour: sh,
+        dateStr: r.date,
+      }
+    })
     setReservations(withDates)
   }
 
@@ -49,8 +59,7 @@ export default function Calendar() {
   }, [])
 
   const handleClick = (day, hour) => {
-    const start = new Date(day)
-    start.setHours(hour, 0, 0, 0)
+    const start = createZonedDate(day, hour, TIME_ZONE)
     setSelectedSlot(start)
   }
 
@@ -69,10 +78,8 @@ export default function Calendar() {
   })
 
   const isReserved = (day, hour) => {
-    return reservations.find(r => {
-      const start = new Date(r.start)
-      return start.getDate() === day.getDate() && start.getHours() === hour
-    })
+    const dayStr = formatDate(day)
+    return reservations.find(r => r.dateStr === dayStr && r.startHour === hour)
   }
 
   return (
@@ -83,7 +90,9 @@ export default function Calendar() {
           <tr>
             <th></th>
             {days.map(d => (
-              <th key={d.toDateString()}>{d.toLocaleDateString()}</th>
+              <th key={d.toDateString()}>
+                {d.toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris' })}
+              </th>
             ))}
           </tr>
         </thead>
