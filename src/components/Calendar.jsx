@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../supabaseClient'
 import ReservationForm from './ReservationForm'
 import {
   TIME_ZONE,
   createZonedDate,
   formatDateInZone,
+  getStartOfWeek,
 } from '../utils/dateHelpers'
 
 const VALIDATION_PASSWORD = import.meta.env.VITE_VALIDATION_PASSWORD
@@ -14,22 +15,16 @@ const closingHour = 21
 
 const formatDate = d => formatDateInZone(d)
 
-function getStartOfWeek(date = new Date(new Date().toLocaleString('en-US', { timeZone: TIME_ZONE }))) {
-  const d = new Date(date)
-  const day = d.getDay()
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1)
-  d.setDate(diff)
-  return d
-}
-
 export default function Calendar() {
   const [reservations, setReservations] = useState([])
   const [selectedSlot, setSelectedSlot] = useState(null)
   const [selectedReservation, setSelectedReservation] = useState(null)
   const [errorMsg, setErrorMsg] = useState(null)
+  const [weekOffset, setWeekOffset] = useState(0)
 
-  const fetchReservations = async () => {
+  const fetchReservations = useCallback(async () => {
     const start = getStartOfWeek()
+    start.setDate(start.getDate() + weekOffset * 7)
     const end = new Date(start.getTime() + 7 * 24 * 60 * 60 * 1000)
     const { data, error } = await supabase
       .from('reservations')
@@ -55,11 +50,11 @@ export default function Calendar() {
       }
     })
     setReservations(withDates)
-  }
+  }, [weekOffset])
 
   useEffect(() => {
     fetchReservations()
-  }, [])
+  }, [fetchReservations])
 
   const handleClick = (day, hour) => {
     const start = createZonedDate(day, hour, 0, 0, TIME_ZONE)
@@ -112,6 +107,7 @@ export default function Calendar() {
   }
 
   const startOfWeek = getStartOfWeek()
+  startOfWeek.setDate(startOfWeek.getDate() + weekOffset * 7)
   const days = [...Array(7).keys()].map(i => {
     const d = new Date(startOfWeek)
     d.setDate(d.getDate() + i)
@@ -126,6 +122,26 @@ export default function Calendar() {
   return (
     <div>
       {errorMsg && <p className="error">{errorMsg}</p>}
+      <div className="week-nav">
+        <button
+          type="button"
+          onClick={() => setWeekOffset(weekOffset - 1)}
+          disabled={weekOffset <= 0}
+        >
+          &lt;
+        </button>
+        <span>
+          {days[0].toLocaleDateString('fr-FR', { timeZone: TIME_ZONE })} -{' '}
+          {days[6].toLocaleDateString('fr-FR', { timeZone: TIME_ZONE })}
+        </span>
+        <button
+          type="button"
+          onClick={() => setWeekOffset(weekOffset + 1)}
+          disabled={weekOffset >= 1}
+        >
+          &gt;
+        </button>
+      </div>
       <div className="calendar-wrapper">
         <table className="calendar">
         <thead>

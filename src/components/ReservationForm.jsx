@@ -4,6 +4,7 @@ import {
   TIME_ZONE,
   formatDateInZone,
   formatTimeInZone,
+  getStartOfWeek,
 } from '../utils/dateHelpers'
 
 export default function ReservationForm({ start, onClose, onSaved }) {
@@ -16,6 +17,24 @@ export default function ReservationForm({ start, onClose, onSaved }) {
     e.preventDefault()
     setSaving(true)
     setFormError(null)
+    const startWeek = getStartOfWeek(start)
+    const endWeek = new Date(startWeek.getTime() + 7 * 24 * 60 * 60 * 1000)
+    const { data: existing, error: fetchError } = await supabase
+      .from('reservations')
+      .select('id')
+      .eq('name', name)
+      .gte('date', formatDateInZone(startWeek, TIME_ZONE))
+      .lte('date', formatDateInZone(endWeek, TIME_ZONE))
+    if (fetchError) {
+      setSaving(false)
+      setFormError('Erreur lors de la vérification des réservations')
+      return
+    }
+    if (existing.length >= 2) {
+      setSaving(false)
+      setFormError('Limite de 2 réservations par semaine atteinte')
+      return
+    }
     const { error } = await supabase.from('reservations').insert({
       name,
       date: formatDateInZone(start, TIME_ZONE),
