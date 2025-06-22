@@ -23,6 +23,7 @@ function getStartOfWeek(date = new Date(new Date().toLocaleString('en-US', { tim
 export default function Calendar() {
   const [reservations, setReservations] = useState([])
   const [selectedSlot, setSelectedSlot] = useState(null)
+  const [selectedReservation, setSelectedReservation] = useState(null)
   const [errorMsg, setErrorMsg] = useState(null)
 
   const fetchReservations = async () => {
@@ -65,6 +66,24 @@ export default function Calendar() {
 
   const closeForm = () => setSelectedSlot(null)
 
+  const closeReservationDetails = () => setSelectedReservation(null)
+
+  const handleDelete = async reservation => {
+    if (!window.confirm('Annuler cette réservation ?')) return
+    const { error } = await supabase
+      .from('reservations')
+      .delete()
+      .eq('id', reservation.id)
+    if (error) {
+      console.error(error.message)
+      setErrorMsg("Erreur lors de l'annulation")
+      return
+    }
+    setErrorMsg(null)
+    closeReservationDetails()
+    fetchReservations()
+  }
+
   const hours = []
   for (let h = openingHour; h < closingHour; h++) {
     hours.push(h)
@@ -106,7 +125,11 @@ export default function Calendar() {
                   <td
                     key={day.toDateString() + hour}
                     className={reserved ? 'reserved' : 'free'}
-                    onClick={() => !reserved && handleClick(day, hour)}
+                    onClick={() =>
+                      reserved
+                        ? setSelectedReservation(reserved)
+                        : handleClick(day, hour)
+                    }
                   >
                     {reserved ? reserved.name : ''}
                   </td>
@@ -118,6 +141,24 @@ export default function Calendar() {
       </table>
       {selectedSlot && (
         <ReservationForm start={selectedSlot} onClose={closeForm} onSaved={fetchReservations} />
+      )}
+      {selectedReservation && (
+        <div className="modal">
+          <div className="form">
+            <h3>Réservation de {selectedReservation.name}</h3>
+            <p>
+              {selectedReservation.start.toLocaleString('fr-FR', { timeZone: TIME_ZONE })}
+            </p>
+            <div className="actions">
+              <button type="button" onClick={() => handleDelete(selectedReservation)}>
+                Annuler
+              </button>
+              <button type="button" onClick={closeReservationDetails}>
+                Fermer
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )
