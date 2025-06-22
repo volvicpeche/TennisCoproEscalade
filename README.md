@@ -17,5 +17,6 @@ npm run dev
 Environment variables required:
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
+- `VITE_VALIDATION_PASSWORD`
 
 Copy `.env.example` to `.env` and fill in the actual values for these keys.

@@ -7,6 +7,8 @@ import {
   formatDateInZone,
 } from '../utils/dateHelpers'
 
+const VALIDATION_PASSWORD = import.meta.env.VITE_VALIDATION_PASSWORD
+
 const openingHour = 8
 const closingHour = 21
 
@@ -85,6 +87,11 @@ export default function Calendar() {
   }
 
   const handleValidate = async reservation => {
+    const pwd = window.prompt('Mot de passe pour valider :')
+    if (pwd !== VALIDATION_PASSWORD) {
+      setErrorMsg('Mot de passe incorrect')
+      return
+    }
     const { error } = await supabase
       .from('reservations')
       .update({ status: 'validated' })
